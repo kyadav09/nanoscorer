@@ -12,12 +12,12 @@ endif()
 add_library(engine_headers INTERFACE)
 target_include_directories(engine_headers INTERFACE ${CMAKE_SOURCE_DIR}/include)
 
-# Release: the numbers you'd actually report.
+# Release: numbers to report.
 add_executable(test_order_book tests/test_order_book.cpp)
 target_link_libraries(test_order_book PRIVATE engine_headers)
 target_compile_options(test_order_book PRIVATE -O3 -march=native -DNDEBUG -Wall -Wextra)
 
-# Sanitized: the build you run in CI / before trusting the release build.
+# Sanitized: build ran in CI / before trusting the release build.
 add_executable(test_order_book_asan tests/test_order_book.cpp)
 target_link_libraries(test_order_book_asan PRIVATE engine_headers)
 target_compile_options(test_order_book_asan PRIVATE -O1 -g -fsanitize=address,undefined -fno-omit-frame-pointer -Wall -Wextra)
@@ -52,14 +52,24 @@ target_link_options(test_matmul_asan PRIVATE -fsanitize=address,undefined)
 
 find_package(Threads REQUIRED)
 
-# add_executable(test_pipeline tests/test_pipeline.cpp)
-# target_link_libraries(test_pipeline PRIVATE engine_headers Threads::Threads)
-# target_compile_options(test_pipeline PRIVATE -O2 -march=native -DNDEBUG -Wall -Wextra)
+add_executable(test_pipeline tests/test_pipeline.cpp)
+target_link_libraries(test_pipeline PRIVATE engine_headers Threads::Threads)
+target_compile_options(test_pipeline PRIVATE -O2 -march=native -DNDEBUG -Wall -Wextra)
 
-# add_executable(test_pipeline_tsan tests/test_pipeline.cpp)
-# target_link_libraries(test_pipeline_tsan PRIVATE engine_headers Threads::Threads)
-# target_compile_options(test_pipeline_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
-# target_link_options(test_pipeline_tsan PRIVATE -fsanitize=thread)
+add_executable(test_pipeline_tsan tests/test_pipeline.cpp)
+target_link_libraries(test_pipeline_tsan PRIVATE engine_headers Threads::Threads)
+target_compile_options(test_pipeline_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
+target_link_options(test_pipeline_tsan PRIVATE -fsanitize=thread)
+
+# COMMENTED OUT UNTIL tools/pipeline_demo.cpp IS CREATED
+# add_executable(pipeline_demo tools/pipeline_demo.cpp)
+# target_link_libraries(pipeline_demo PRIVATE engine_headers Threads::Threads)
+# target_compile_options(pipeline_demo PRIVATE -O3 -march=native -DNDEBUG -Wall -Wextra)
+
+# add_executable(pipeline_demo_tsan tools/pipeline_demo.cpp)
+# target_link_libraries(pipeline_demo_tsan PRIVATE engine_headers Threads::Threads)
+# target_compile_options(pipeline_demo_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
+# target_link_options(pipeline_demo_tsan PRIVATE -fsanitize=thread)
 
 enable_testing()
 add_test(NAME order_book_asan COMMAND test_order_book_asan)
@@ -70,5 +80,7 @@ add_test(NAME quickscorer_avx2_asan COMMAND test_quickscorer_avx2_asan)
 add_test(NAME quickscorer_avx2_release COMMAND test_quickscorer_avx2)
 add_test(NAME matmul_asan COMMAND test_matmul_asan --correctness-only)
 add_test(NAME matmul_release COMMAND test_matmul)
-# add_test(NAME pipeline_tsan COMMAND test_pipeline_tsan)
-# add_test(NAME pipeline_release COMMAND test_pipeline)
+add_test(NAME pipeline_tsan COMMAND test_pipeline_tsan)
+add_test(NAME pipeline_release COMMAND test_pipeline)
+# add_test(NAME pipeline_demo_tsan COMMAND pipeline_demo_tsan)
+# add_test(NAME pipeline_demo_release COMMAND pipeline_demo)

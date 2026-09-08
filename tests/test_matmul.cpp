@@ -1,4 +1,4 @@
-#include "qscorer/matmul.hpp"
+#include "matmul/matmul.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdio>

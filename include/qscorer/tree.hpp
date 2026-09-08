@@ -56,4 +56,4 @@ inline int assign_leaf_bits(TreeNode* n, int next = 0) {
     return next;
 }
 
-}
+} // namespace qs

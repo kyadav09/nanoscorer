@@ -168,4 +168,4 @@ public:
     }
 };
 
-} 
+} // namespace ob

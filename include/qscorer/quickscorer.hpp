@@ -145,4 +145,4 @@ public:
     std::size_t num_trees() const { return trees_.size(); }
 };
 
-}
+} // namespace qs

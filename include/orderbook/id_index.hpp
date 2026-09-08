@@ -77,4 +77,5 @@ public:
         }
     }
 };
-}
+
+} // namespace ob

@@ -30,4 +30,5 @@ struct PriceLevel {
     Slot head = INVALID_SLOT;
     Slot tail = INVALID_SLOT;
 };
-}
+
+} // namespace ob
