@@ -1,3 +1,4 @@
+Markdown
 # Nanoscorer: Zero-Allocation SIMD Micro-Inference Engine
 
 A bare-metal C++ hot path for a market-making/prediction system: feed → order book → features → inference → decision. Built for nanosecond-scale latency rather than throughput. 
@@ -23,14 +24,11 @@ The exact "why" behind each implementation—including cache profiling, instruct
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ctest --test-dir build --output-on-failure
-```
-
 Twelve targets exist: each component has a -O3 -march=native release target, and a sanitized counterpart to catch bugs before trusting the release build (_asan for memory errors, _tsan for thread concurrency verification).
 
 The roofline tools are standalone, not part of this build. They're a one-time-per-machine measurement, not something that needs to rerun on every build:
 
-```bash
+Bash
 g++ -std=c++20 -O3 -march=native -DNDEBUG -Iinclude tools/roofline_bench.cpp -o roofline_bench
 ./roofline_bench
 python3 tools/roofline_plot.py
-```
