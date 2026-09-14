@@ -150,21 +150,23 @@ void print_percentiles(std::vector<long long>& ns, const char* label) {
 }
 
 int main() {
+    // 8192 (2^13) forces power-of-two modulo optimization and fits perfectly in L2 cache.
     constexpr std::size_t NUM_LEVELS = 8192;
+    // pre-allocate to prevent dynamic heap allocations on the hot path.
     constexpr std::size_t MAX_ORDERS = 200000;
     constexpr Price BASE = 0;
     constexpr int NUM_EVENTS = 200000;
-    
     auto events = generate_events(/*seed=*/42, NUM_EVENTS, static_cast<int>(NUM_LEVELS), BASE);
     GBDTEnsemble ensemble = build_demo_ensemble(/*seed=*/7, /*num_trees=*/50, /*max_depth=*/5);
-
+    // Single-threaded reference: deterministic ground-truth for correctness verification.
     auto ref_book = std::make_unique<OrderBook<NUM_LEVELS, MAX_ORDERS>>(BASE);
-    std::vector<double> ref_predications;
+    std::vector<double> ref_predictions;
+    ref_predictions.reserve(events.size());
     for (const auto& e: events) {
         apply_event(*ref_book, e);
         float feat[NUM_FEATURES];
         if (extract_features(*ref_book, BASE, feat))
-            ref_predications.push_back(ensemble.predict(feat));
+            ref_predictions.push_back(ensemble.predict(feat));
     }
 
     auto live_book = std::make_unique<OrderBook<NUM_LEVELS, MAX_ORDERS>>(BASE);
@@ -174,16 +176,19 @@ int main() {
     live_predictions.reserve(events.size());
     std::vector<long long> latencies_ns;
     latencies_ns.reserve(events.size());
+
     std::thread producer([&] {
         for (const auto& e: events) 
             while (!rb.try_push(e))
-                std::this_thread::yield();
+                std::this_thread::yield(); // Spin-wait to avoid OS context-switch overhead.
+        // Release barrier: guarantees queue writes are visible before the flag is set.
         producer_done.store(true, std::memory_order_release);
     });
 
     std::thread consumer([&] {
         OrderEvent e;
         auto process_one = [&] {
+            // Measure compute latency (starts AFTER queue pop, ignoring queueing delay).
             auto t0 = std::chrono::steady_clock::now();
             apply_event(*live_book, e);
             float feat[NUM_FEATURES];
@@ -196,7 +201,33 @@ int main() {
                 latencies_ns.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count());
             }
         };
+
+        for (;;) {
+            if (rb.try_pop(e)) 
+                process_one();
+            // Acquire barrier: synchronizes CPU caches with producer's release barrier.
+            else if (producer_done.load(std::memory_order_acquire)) {
+                // Drain residual items pushed immediately before the flag flipped.
+                while (rb.try_pop(e))
+                    process_one();
+                break;
+            } else 
+                std::this_thread::yield();
+        }
     });
+
+    producer.join();
+    consumer.join();
+
+    // Verify lock-free synchronization did not reorder or tear data.
+    CHECK(live_predictions.size() == ref_predictions.size());
+    for (std::size_t i = 0; i < ref_predictions.size(); ++i)
+        CHECK(live_predictions[i] == ref_predictions[i]);
+    
+    std::printf("correctness: OK -- %zu predictions, threaded pipeline exactly matches "
+                "single-threaded reference\n", ref_predictions.size());
+
+    print_percentiles(latencies_ns, "end-to-end hot path (book update + features + QuickScorer)");
 
     return 0;
 }

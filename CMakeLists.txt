@@ -61,15 +61,20 @@ target_link_libraries(test_pipeline_tsan PRIVATE engine_headers Threads::Threads
 target_compile_options(test_pipeline_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
 target_link_options(test_pipeline_tsan PRIVATE -fsanitize=thread)
 
-# COMMENTED OUT UNTIL tools/pipeline_demo.cpp IS CREATED
-# add_executable(pipeline_demo tools/pipeline_demo.cpp)
-# target_link_libraries(pipeline_demo PRIVATE engine_headers Threads::Threads)
-# target_compile_options(pipeline_demo PRIVATE -O3 -march=native -DNDEBUG -Wall -Wextra)
+# THE PIPELINE DEMO TARGETS (Uncommented)
+add_executable(pipeline_demo tools/pipeline_demo.cpp)
+target_link_libraries(pipeline_demo PRIVATE engine_headers Threads::Threads)
+target_compile_options(pipeline_demo PRIVATE -O3 -march=native -DNDEBUG -Wall -Wextra)
 
-# add_executable(pipeline_demo_tsan tools/pipeline_demo.cpp)
-# target_link_libraries(pipeline_demo_tsan PRIVATE engine_headers Threads::Threads)
-# target_compile_options(pipeline_demo_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
-# target_link_options(pipeline_demo_tsan PRIVATE -fsanitize=thread)
+add_executable(pipeline_demo_tsan tools/pipeline_demo.cpp)
+target_link_libraries(pipeline_demo_tsan PRIVATE engine_headers Threads::Threads)
+target_compile_options(pipeline_demo_tsan PRIVATE -O1 -g -fsanitize=thread -Wall -Wextra)
+target_link_options(pipeline_demo_tsan PRIVATE -fsanitize=thread)
+
+# ROOFLINE BENCHMARK
+add_executable(roofline_bench tools/roofline_bench.cpp)
+target_link_libraries(roofline_bench PRIVATE engine_headers)
+target_compile_options(roofline_bench PRIVATE -O3 -march=native -DNDEBUG -Wall -Wextra)
 
 enable_testing()
 add_test(NAME order_book_asan COMMAND test_order_book_asan)
@@ -82,5 +87,5 @@ add_test(NAME matmul_asan COMMAND test_matmul_asan --correctness-only)
 add_test(NAME matmul_release COMMAND test_matmul)
 add_test(NAME pipeline_tsan COMMAND test_pipeline_tsan)
 add_test(NAME pipeline_release COMMAND test_pipeline)
-# add_test(NAME pipeline_demo_tsan COMMAND pipeline_demo_tsan)
-# add_test(NAME pipeline_demo_release COMMAND pipeline_demo)
+add_test(NAME pipeline_demo_tsan COMMAND pipeline_demo_tsan)
+add_test(NAME pipeline_demo_release COMMAND pipeline_demo)
