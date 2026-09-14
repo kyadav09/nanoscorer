@@ -465,7 +465,7 @@ path competing with QuickScorer for the same slot in this pipeline.
 
 ## Build & test
 
-```
+```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 ctest --test-dir build --output-on-failure
@@ -484,7 +484,7 @@ bug class there and ASan/UBSan don't check for them.
 one-time-per-machine measurement, not something that needs to rerun on
 every build:
 
-```
+```bash
 g++ -std=c++20 -O3 -march=native -DNDEBUG -Iinclude tools/roofline_bench.cpp -o roofline_bench
 ./roofline_bench          # paste its numbers into roofline_plot.py, then:
 python3 tools/roofline_plot.py
