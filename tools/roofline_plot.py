@@ -5,11 +5,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 
+# Hardware ceilings physically measured via roofline_bench.cpp
 PEAK_AVX2_GFLOPS = 100.0
 PEAK_AVX512_GFLOPS = 213.3
 PEAK_BW_GBPS = 19.3
 
-# (n, compulsory_AI, tiled_gflops, cache_oblivious_gflops)
+# Empirical results for the roofline data points
+# Format: (n, compulsory_AI, tiled_gflops, cache_oblivious_gflops)
+# Note: AI assumes perfectly cached memory traffic (reads A, reads B, writes C once)
 matmul_points = [
     (128, 21.33, 25.73, 23.83),
     (256, 42.67, 23.99, 14.71),
@@ -22,6 +25,8 @@ naive_point = (256, 42.67, 21.74)
 fig, ax = plt.subplots(figsize=(9, 6.5))
 
 ai_range = np.logspace(-1, 3, 200)
+
+# The memory bandwidth roof (Performance = AI * Bandwidth)
 bw_roof = ai_range * PEAK_BW_GBPS
 
 ax.plot(ai_range, np.minimum(bw_roof, PEAK_AVX512_GFLOPS), color="#888", lw=1.5, ls="--",
@@ -45,6 +50,7 @@ ax.plot([naive_point[1]], [naive_point[2]], "^", color="#2ca02c", ms=10,
 ax.annotate("naive_ikj (true position further left)", (naive_point[1], naive_point[2]),
             textcoords="offset points", xytext=(10, 12), fontsize=8, color="#2ca02c")
 
+# Standard roofline charts always use a log-log scale
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlabel("Arithmetic intensity (FLOPs / byte)")
