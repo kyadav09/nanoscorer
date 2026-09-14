@@ -1,4 +1,4 @@
-# Nanoscorer: Zero-Allocation SIMD Micro-Inference Engine
+# nanoscorer: Zero-Allocation SIMD Micro-Inference Engine
 
 A bare-metal C++ hot path for a market-making/prediction system: feed → order book → features → inference → decision. Built for nanosecond-scale latency rather than throughput. 
 
